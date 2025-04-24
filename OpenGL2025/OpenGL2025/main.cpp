@@ -72,7 +72,6 @@ int main()
 	GLuint triangleVAO, triangleEBO;
 	int trianglesSize, triangleIndexCount;
 	Triangle::createTriangles(triangleVAO, triangleEBO, trianglesSize, triangleIndexCount, trianglesVertices, triangleIndicis);
-	//Triangle::createTriangle(triangleVAO, triangleSize, triangleVertices);
 	Util::createProgram(simpleProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
 
 	// Create viewport
