@@ -26,7 +26,7 @@ void Triangle::createTriangle(GLuint& VAO, int& size, std::vector<float>& vertic
 
 void Triangle::createTriangles(GLuint& VAO, GLuint& EBO, int& size, int& numIndices, std::vector<float>& vertices, std::vector<int>& indicis)
 {
-	int stride = (3 + 4) * sizeof(float);
+	int stride = (3 + 3 + 2 + 3) * sizeof(float);
 
 	size = vertices.size() / 7;
 	numIndices = indicis.size();
