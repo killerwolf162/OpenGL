@@ -103,13 +103,15 @@ int main()
 	// Create viewport
 	glViewport(0, 0, WIDTH, HEIGHT);
 
-	glm::vec3 lightPosition = glm::vec3(0, 2.5f, 5.0f);
-	glm::vec3 cameraPosition = glm::vec3(0, 2.5f, -5.0f);
+	glm::vec3 lightPosition = glm::vec3(2, 2, 3.0f);
+	glm::vec3 cameraPosition = glm::vec3(0, 0, 5.0f);
 
 	//matrices!
 
 	glm::mat4 view = glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 1));
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+
+	glEnable(GL_DEPTH_TEST);
 
 	// Rendering Loop
 	while (!glfwWindowShouldClose(window))
@@ -120,7 +122,7 @@ int main()
 		// Rendering
 
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUniform3fv(glGetUniformLocation(woodProgram, "lightPosition"), 1, glm::value_ptr(lightPosition));
 		glUniform3fv(glGetUniformLocation(woodProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
