@@ -24,6 +24,8 @@ public:
 	Cube(std::vector<float> verts, std::vector<int> inds, const char* tex, const char* normalTex, glm::vec3 position);
 	void rotate(float angle);
 
+	void render(GLuint program);
+
 	~Cube();
 
 };

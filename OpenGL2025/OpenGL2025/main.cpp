@@ -124,32 +124,14 @@ int main()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUniformMatrix4fv(glGetUniformLocation(woodProgram, "world"), 1, GL_FALSE, glm::value_ptr(box.world));
-		glUniformMatrix4fv(glGetUniformLocation(woodProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(woodProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
 		glUniform3fv(glGetUniformLocation(woodProgram, "lightPosition"), 1, glm::value_ptr(lightPosition));
 		glUniform3fv(glGetUniformLocation(woodProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, box.tex);
+		glUniformMatrix4fv(glGetUniformLocation(woodProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(woodProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, box.normalTex);
-
-		glBindVertexArray(box.cubeVAO);
-		glDrawElements(GL_TRIANGLES, box.cubeIndexCount, GL_UNSIGNED_INT, 0);
-
-		glUniformMatrix4fv(glGetUniformLocation(woodProgram, "world"), 1, GL_FALSE, glm::value_ptr(box2.world));
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, box2.tex);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, box2.normalTex);
-
-		glBindVertexArray(box2.cubeVAO);
-		glDrawElements(GL_TRIANGLES, box2.cubeIndexCount, GL_UNSIGNED_INT, 0);
-
+		box.render(woodProgram);
+		box2.render(woodProgram);
 
 		// Swap & Poll
 		glfwSwapBuffers(window);
