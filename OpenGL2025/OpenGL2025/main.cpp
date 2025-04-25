@@ -93,9 +93,6 @@ int main()
 
 	Util::createProgram(woodProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
 
-	/*GLuint boxTex = Util::loadTexture("textures/box-texture-01.png");
-	GLuint boxNormal = Util::loadTexture("textures/box-texture-01-normal.png");*/
-
 	// Set texture channels
 	glUseProgram(woodProgram);
 	glUniform1i(glGetUniformLocation(woodProgram, "mainTex"), 0);
@@ -112,7 +109,6 @@ int main()
 	glm::mat4 view = glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 1));
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 
-	
 	// Rendering Loop
 	while (!glfwWindowShouldClose(window))
 	{
