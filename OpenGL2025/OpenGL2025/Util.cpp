@@ -2,7 +2,10 @@
 #include <iostream>
 #include <fstream>
 
-int Util::init(GLFWwindow*& window)
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+int Util::init(GLFWwindow*& window, const int width, const int height)
 {
 	//GLFW Init
 	glfwInit();
@@ -12,7 +15,7 @@ int Util::init(GLFWwindow*& window)
 	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 	//Make Window and Active Context
-	window = glfwCreateWindow(1280, 720, "LearnOpenGL", NULL, NULL);
+	window = glfwCreateWindow(width, height, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -119,4 +122,35 @@ void Util::createProgram(GLuint& programID, const char* vertex, const char* frag
 
 	delete vertexSrc;
 	delete fragmentSrc;
+}
+
+GLuint Util::loadTexture(const char* path)
+{
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	int width, height, numChannels;
+	unsigned char* data = stbi_load(path, &width, &height, &numChannels, 0);
+
+	if (data)
+	{
+		if (numChannels == 3)
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		else if (numChannels == 4)
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Error loading texture: " << path << std::endl;
+	}
+
+	stbi_image_free(data);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return textureID;
 }
