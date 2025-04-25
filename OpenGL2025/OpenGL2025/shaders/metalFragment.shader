@@ -32,9 +32,8 @@ void main()
 	vec3 reflDir = normalize(reflect(lightDirection, normal));
 
 	// lighting
-	
 	float lightValue = max(-dot(normal, lightDirection), 0.0);
-	float specular = pow(max(-dot(reflDir, viewDir),0.0),40);
+	float specular = pow(max(-dot(reflDir, viewDir),0.0),5);
 
 	vec4 output = vec4(color, 1.0f) * texture(mainTex, uv);
 	output.rgb = output.rgb * min(lightValue + 0.1, 1.0) + specular * output.rgb;

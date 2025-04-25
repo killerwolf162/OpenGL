@@ -19,7 +19,6 @@ Cube::Cube(std::vector<float> verts, std::vector<int> inds, const char* tex, con
 
 }
 
-
 Cube::~Cube()
 {
 }

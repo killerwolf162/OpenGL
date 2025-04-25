@@ -41,7 +41,10 @@
     <None Include="shaders\simpleVertex.shader">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="shaders\simpleFragment.shader">
+    <None Include="shaders\woodFragment.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="metalFragment.shader">
       <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>
