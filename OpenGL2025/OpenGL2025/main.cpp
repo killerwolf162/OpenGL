@@ -7,6 +7,7 @@
 #include "Util.h"
 #include "Geometry.h"
 #include "Cube.h"
+#include "Animations.h"
 
 // Program IDs
 GLuint woodProgram;
@@ -127,7 +128,10 @@ int main()
 		glUniformMatrix4fv(glGetUniformLocation(woodProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 		box.render(woodProgram);
+		Animations::basicAnim(box);
+
 		box2.render(woodProgram);
+		Animations::basicAnim(box2);
 
 		// Swap & Poll
 		glfwSwapBuffers(window);

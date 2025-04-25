@@ -19,9 +19,19 @@ Cube::Cube(std::vector<float> verts, std::vector<int> inds, const char* tex, con
 
 }
 
+
+Cube::~Cube()
+{
+}
+
 void Cube::rotate(float angle)
 {
 	world = glm::rotate(world, glm::radians(angle), glm::vec3(0, 1, 0));
+}
+
+void Cube::translate(glm::vec3 movementVec)
+{
+	world = glm::translate(world, movementVec);
 }
 
 void Cube::render(GLuint program)
@@ -36,8 +46,4 @@ void Cube::render(GLuint program)
 
 	glBindVertexArray(cubeVAO);
 	glDrawElements(GL_TRIANGLES, cubeIndexCount, GL_UNSIGNED_INT, 0);
-}
-
-Cube::~Cube()
-{
 }
