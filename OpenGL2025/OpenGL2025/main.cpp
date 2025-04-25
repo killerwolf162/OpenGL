@@ -1,53 +1,57 @@
 #include <iostream>
 #include <vector>
-#include "Util.h"
-#include "Triangle.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-void createShaders();
+#include "Util.h"
+#include "Geometry.h"
+#include "Cube.h"
 
 // Program IDs
-GLuint simpleProgram;
+GLuint woodProgram;
+GLuint metalProgram;
 
-std::vector<float> trianglesVertices
+std::vector<float> vertices
 {
-	// positions            //colors            // tex coords   // normals
-	0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, -1.f, 0.f,
-	0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, -1.f, 0.f,
-	-0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, -1.f, 0.f,
-	-0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, -1.f, 0.f,
+	// positions            //colors            // tex coords   // normals          //tangents      //bitangents
+	0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
+	0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
+	-0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
+	-0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
 
-	0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   2.f, 0.f,       1.f, 0.f, 0.f,
-	0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   2.f, 1.f,       1.f, 0.f, 0.f,
+	0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
+	0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   1.f, 0.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
 
-	0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   1.f, 2.f,       0.f, 0.f, 1.f,
-	-0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   0.f, 2.f,       0.f, 0.f, 1.f,
+	0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
+	-0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
 
-	-0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   -1.f, 1.f,      -1.f, 0.f, 0.f,
-	-0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   -1.f, 0.f,      -1.f, 0.f, 0.f,
+	-0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   0.f, 0.f,      -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
+	-0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   0.f, 1.f,      -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
 
-	-0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   0.f, -1.f,      0.f, 0.f, -1.f,
-	0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   1.f, -1.f,      0.f, 0.f, -1.f,
+	-0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   0.f, 1.f,      0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
+	0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,      0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
 
-	-0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   3.f, 0.f,       0.f, 1.f, 0.f,
-	-0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   3.f, 1.f,       0.f, 1.f, 0.f,
+	-0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
+	-0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
 
-	0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, 0.f, 1.f,
-	-0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, 0.f, 1.f,
+	0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
+	-0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
 
-	-0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       -1.f, 0.f, 0.f,
-	-0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       -1.f, 0.f, 0.f,
+	-0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
+	-0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   1.f, 1.f,       -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
 
-	-0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, 0.f, -1.f,
-	0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, 0.f, -1.f,
+	-0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
+	0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
 
-	0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       1.f, 0.f, 0.f,
-	0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       1.f, 0.f, 0.f,
+	0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
+	0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   0.f, 0.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
 
-	0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   2.f, 0.f,       0.f, 1.f, 0.f,
-	0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   2.f, 1.f,       0.f, 1.f, 0.f
+	0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
+	0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f
 };
 
-std::vector<int> triangleIndicis
+std::vector<int> indicis
 {  // note that we start from 0!
 	// DOWN
 	0, 1, 2,   // first triangle
@@ -69,21 +73,46 @@ std::vector<int> triangleIndicis
 	22, 13, 23,    // second triangle
 };
 
+const int WIDTH = 1280;
+const int HEIGHT = 720;
 
 int main()
 {
 	GLFWwindow* window;
-	int res = Util::init(window);
+	int res = Util::init(window, WIDTH, HEIGHT);
 	if (res != 0) return res;
 
-	GLuint triangleVAO, triangleEBO;
-	int trianglesSize, triangleIndexCount;
-	Triangle::createTriangles(triangleVAO, triangleEBO, trianglesSize, triangleIndexCount, trianglesVertices, triangleIndicis);
-	Util::createProgram(simpleProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
+	glm::vec3 position1 = glm::vec3(-1, 0, 0);
+	glm::vec3 position2 = glm::vec3(2, 0, 0);
+
+	Cube box(vertices, indicis, "textures/box-texture-01.png", "textures/box-texture-01-normal.png", position1);
+	box.rotate(15.0f);
+
+	Cube box2(vertices, indicis, "textures/box-texture-01.png", "textures/box-texture-01-normal.png", position2);
+	box2.rotate(65.0f);
+
+	Util::createProgram(woodProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
+
+	/*GLuint boxTex = Util::loadTexture("textures/box-texture-01.png");
+	GLuint boxNormal = Util::loadTexture("textures/box-texture-01-normal.png");*/
+
+	// Set texture channels
+	glUseProgram(woodProgram);
+	glUniform1i(glGetUniformLocation(woodProgram, "mainTex"), 0);
+	glUniform1i(glGetUniformLocation(woodProgram, "normalTex"), 1);
 
 	// Create viewport
-	glViewport(0, 0, 1280, 720);
+	glViewport(0, 0, WIDTH, HEIGHT);
 
+	glm::vec3 lightPosition = glm::vec3(0, 2.5f, 5.0f);
+	glm::vec3 cameraPosition = glm::vec3(0, 2.5f, -5.0f);
+
+	//matrices!
+
+	glm::mat4 view = glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 1));
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+
+	
 	// Rendering Loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -92,13 +121,35 @@ int main()
 
 		// Rendering
 
-		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(simpleProgram);
+		glUniformMatrix4fv(glGetUniformLocation(woodProgram, "world"), 1, GL_FALSE, glm::value_ptr(box.world));
+		glUniformMatrix4fv(glGetUniformLocation(woodProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(woodProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-		glBindVertexArray(triangleVAO);
-		glDrawElements(GL_TRIANGLES, triangleIndexCount, GL_UNSIGNED_INT, 0);
+		glUniform3fv(glGetUniformLocation(woodProgram, "lightPosition"), 1, glm::value_ptr(lightPosition));
+		glUniform3fv(glGetUniformLocation(woodProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, box.tex);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, box.normalTex);
+
+		glBindVertexArray(box.cubeVAO);
+		glDrawElements(GL_TRIANGLES, box.cubeIndexCount, GL_UNSIGNED_INT, 0);
+
+		glUniformMatrix4fv(glGetUniformLocation(woodProgram, "world"), 1, GL_FALSE, glm::value_ptr(box2.world));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, box2.tex);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, box2.normalTex);
+
+		glBindVertexArray(box2.cubeVAO);
+		glDrawElements(GL_TRIANGLES, box2.cubeIndexCount, GL_UNSIGNED_INT, 0);
+
 
 		// Swap & Poll
 		glfwSwapBuffers(window);
@@ -108,9 +159,4 @@ int main()
 
 	glfwTerminate();
 	return 0;
-}
-
-void createShaders()
-{
-	Util::createProgram(simpleProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
 }

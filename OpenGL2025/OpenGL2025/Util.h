@@ -4,9 +4,10 @@
 static class Util
 {
 public:
-	static int init(GLFWwindow*& window);
+	static int init(GLFWwindow*& window, int width, int height);
 	static void processInput(GLFWwindow* window);
 	static void loadFile(const char* filename, char*& output);
 	static void createProgram(GLuint& programID, const char* vertex, const char* fragment);
+	static GLuint loadTexture(const char* path);
 };
 
