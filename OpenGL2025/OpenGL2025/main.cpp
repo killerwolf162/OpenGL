@@ -88,6 +88,7 @@ int main()
 
 	Cube box(vertices, indicis, "textures/box-texture-01.png", "textures/box-texture-01-normal.png", position1);
 	box.rotate(15.0f);
+	box.translateSpeed = -box.translateSpeed;
 
 	Cube box2(vertices, indicis, "textures/box-texture-01.png", "textures/box-texture-01-normal.png", position2);
 	box2.rotate(65.0f);
@@ -132,7 +133,7 @@ int main()
 
 		box2.render(woodProgram);
 		Animations::basicAnim(box2);
-
+		
 		// Swap & Poll
 		glfwSwapBuffers(window);
 		glfwPollEvents();
