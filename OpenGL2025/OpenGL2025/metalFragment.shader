@@ -31,7 +31,7 @@ void main()
 	
 	//specular -> going for metal
 	float specularStrength = 1;
-    float shininess = 256.0;
+    float shininess = 1024.0;
     float spec = pow(max(dot(reflDir, viewDir), 0.0), shininess) * specularStrength;
 
 	// Texture and color
