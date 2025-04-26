@@ -17,7 +17,7 @@ private:
 	glm::vec3 worldPosition;
 public:
 	glm::mat4 world;
-	glm::vec3 translateSpeed = glm::vec3(0, 0.001f, 0);
+	glm::vec3 translateSpeed = glm::vec3(0, 0, 0);
 	float rotationSpeed = 0.1f;
 
 	Cube(std::vector<float> verts, std::vector<int> inds, const char* tex, const char* normalTex, glm::vec3 position);
