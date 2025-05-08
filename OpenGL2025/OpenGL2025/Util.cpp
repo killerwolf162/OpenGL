@@ -4,6 +4,9 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 int Util::init(GLFWwindow*& window, const int width, const int height)
 {
@@ -24,7 +27,6 @@ int Util::init(GLFWwindow*& window, const int width, const int height)
 	}
 	glfwMakeContextCurrent(window);
 
-
 	// Load GLAD
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -33,6 +35,29 @@ int Util::init(GLFWwindow*& window, const int width, const int height)
 	}
 
 	return 0;
+}
+
+void Util::mouseCallback(GLFWwindow* window, double xpos, double ypos, float& lastX, float& lastY, float& yaw, float& pitch, bool firstTime)
+{
+	float x = (float)xpos;
+	float y = (float)ypos;
+
+	if (firstTime)
+	{
+		lastX = x;
+		lastY = y;
+	}
+
+	float dx = x - lastX;
+	float dy = y - lastY;
+	lastX = x;
+	lastY = y;
+
+	yaw += dx;
+	pitch = glm::clamp(pitch + dy, -89.9f, 89.9f);
+
+	if (yaw >= 180) yaw -= 360;
+	if (yaw <= -180) yaw += 360;
 }
 
 void Util::processInput(GLFWwindow* window)

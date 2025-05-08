@@ -7,15 +7,18 @@
 class Cube
 {
 private:
-	GLuint cubeVAO, cubeEBO;
+
 	GLuint tex, normalTex;
-	int cubeSize, cubeIndexCount;
+	
 
 	std::vector<float> vertices;
 	std::vector<int> indicis;
 
 	glm::vec3 worldPosition;
 public:
+	GLuint cubeVAO, cubeEBO;
+	int cubeSize, cubeIndexCount;
+
 	glm::mat4 world;
 	glm::vec3 translateSpeed = glm::vec3(0, 0, 0);
 	float rotationSpeed = 0.1f;
