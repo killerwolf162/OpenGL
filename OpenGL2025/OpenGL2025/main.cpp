@@ -127,12 +127,12 @@ int main()
 		// Set wood program
 		setupBasicProgram(woodProgram, lightPosition, cameraPosition, view, projection);
 		box.render(woodProgram);
-		Animations::movementInBoxAnim(box,2,3);
+		Animations::movementInBoxAnim(box,1,1);
 
 		// Set metal program
 		setupBasicProgram(metalProgram, lightPosition, cameraPosition, view, projection);
 		box2.render(metalProgram);
-		Animations::movementInBoxAnim(box2,4,4);
+		Animations::movementInBoxAnim(box2,2,2);
 		
 		// Swap & Poll
 		glfwSwapBuffers(window);
