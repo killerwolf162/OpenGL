@@ -15,7 +15,7 @@ GLuint metalProgram;
 GLuint skyboxProgram;
 GLuint terrainProgram;
 
-// Bbox verices
+// Box verices
 std::vector<float> vertices
 {
 	// positions            //colors            // tex coords   // normals          //tangents      //bitangents
@@ -81,20 +81,36 @@ std::vector<int> indicis
 const int WIDTH = 1280;
 const int HEIGHT = 720;
 
+bool keys[1024];
+
 // World Data
 glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
-glm::vec3 cameraPosition = glm::vec3(0, 2, 6);
+glm::vec3 cameraPosition = glm::vec3(200, 50, 200);
 glm::mat4 view, projection;
 
 float lastX, lastY;
 bool firstMouse = true;
 float camYaw, camPitch;
+glm::quat camQuat;
+
+// terrain data
+GLuint terrainVAO;
+GLuint terrainIndexCount;
+GLuint heightmapID;
+GLuint heightNormalID;
+unsigned char* heightmapTex;
+unsigned char* heighNormalTex;
+
+GLuint dirt, sand, grass, rock, snow;
+
 
 // forward dec
 void setupBasicProgram(GLuint program, glm::vec3 lightPos, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat);
 void setupSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat, int indexCount);
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
-unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mod);
+unsigned int generatePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
+void renderTerrain();
 
 int main()
 {
@@ -103,10 +119,20 @@ int main()
 	if (res != 0) return res;
 
 	glfwSetCursorPosCallback(window, mouseCallback);
+	glfwSetKeyCallback(window, keyCallback);
 	glfwMakeContextCurrent(window);
 
 	glm::vec3 position1 = glm::vec3(0, 0, 0);
 	glm::vec3 position2 = glm::vec3(0, 0, 0);
+
+	terrainVAO = generatePlane("textures/heightmap.png", heightmapTex, GL_RGBA, 4, 100.0f, 5.0f, terrainIndexCount, heightmapID);
+	heightNormalID = Util::loadTexture("textures/heightnormal.png");
+
+	dirt = Util::loadTexture("textures/dirt.jpg");
+	sand = Util::loadTexture("textures/sand.jpg");
+	grass = Util::loadTexture("textures/grass.png", 4);
+	rock = Util::loadTexture("textures/rock.jpg");
+	snow = Util::loadTexture("textures/snow.jpg");
 
 	// Setup box1
 	Cube box(vertices, indicis, "textures/box-texture-01.png", "textures/box-texture-01-normal.png", position1);
@@ -129,24 +155,27 @@ int main()
 
 	// Matrices!
 	view = glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 1));
-	projection = glm::perspective(glm::radians(90.0f), WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+	projection = glm::perspective(glm::radians(90.0f), WIDTH / (float)HEIGHT, 0.1f, 5000.0f);
 
 	// Rendering Loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// Input 
-		Util::processInput(window);
+		Util::processInput(window, keys, cameraPosition, view, camQuat);
 
 		// Rendering
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// les 4 skybox
+		// les 4 skybox + terrain
 		setupSkyBox(skyboxProgram, box.cubeVAO, lightDirection, cameraPosition, view, projection, box.cubeIndexCount);
+
+
+		renderTerrain();
 
 
 		//Les 3 Programs + anims
 
-		// Set wood program
+		/*// Set wood program
 		setupBasicProgram(woodProgram, lightDirection, cameraPosition, view, projection);
 		box.render(woodProgram);
 		Animations::movementInBoxAnim(box, 1, 1);
@@ -154,7 +183,7 @@ int main()
 		// Set metal program
 		setupBasicProgram(metalProgram, lightDirection, cameraPosition, view, projection);
 		box2.render(metalProgram);
-		Animations::movementInBoxAnim(box2, 2, 2);
+		Animations::movementInBoxAnim(box2, 2, 2); */
 
 		// Swap & Poll
 		glfwSwapBuffers(window);
@@ -181,10 +210,11 @@ void setupSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 camer
 {
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH);
 
 	glUseProgram(program);
 
-	glUniform3fv(glGetUniformLocation(program, "lightPosition"), 1, glm::value_ptr(lightDir));
+	glUniform3fv(glGetUniformLocation(program, "lightDirection"), 1, glm::value_ptr(lightDir));
 	glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(cameraPos));
 
 	glm::mat4 worldMat = glm::mat4(1.0f);
@@ -200,6 +230,67 @@ void setupSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 camer
 
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH);
+}
+
+
+void renderTerrain()
+{
+	glEnable(GL_DEPTH);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	glUseProgram(terrainProgram);
+	glUniform1i(glGetUniformLocation(terrainProgram, "mainTex"), 0);
+	glUniform1i(glGetUniformLocation(terrainProgram, "normalTex"), 1);
+
+	glUniform1i(glGetUniformLocation(terrainProgram, "dirt"), 2);
+	glUniform1i(glGetUniformLocation(terrainProgram, "sand"), 3);
+	glUniform1i(glGetUniformLocation(terrainProgram, "grass"), 4);
+	glUniform1i(glGetUniformLocation(terrainProgram, "rock"), 5);
+	glUniform1i(glGetUniformLocation(terrainProgram, "snow"), 6);
+
+	glm::mat4 worldMat = glm::mat4(1.0f);
+
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "world"), 1, GL_FALSE, glm::value_ptr(worldMat));
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+	float t = glfwGetTime();
+	lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
+
+	glUniform3fv(glGetUniformLocation(terrainProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
+	glUniform3fv(glGetUniformLocation(terrainProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, heightmapID);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, heightNormalID);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, dirt);
+
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, sand);
+
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, grass);
+
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, rock);
+
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, snow);
+
+	glBindVertexArray(terrainVAO);
+	glDrawElements(GL_TRIANGLES, terrainIndexCount, GL_UNSIGNED_INT, 0);
+
+
+	glDisable(GL_DEPTH);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos)
@@ -225,7 +316,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos)
 	if (camYaw >= 180) camYaw -= 360;
 	if (camYaw <= -180) camYaw += 360;
 
-	glm::quat camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
+	camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
 
 	glm::vec3 camForward = camQuat * glm::vec3(0, 0, 1);
 	glm::vec3 camUp = camQuat * glm::vec3(0, 1, 0);
@@ -233,10 +324,26 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos)
 	view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
 }
 
-unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID)
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
+{
+	if (action == GLFW_PRESS)
+	{
+		// store key is pressed
+		keys[key] = true;
+	}
+
+	else if (action == GLFW_RELEASE)
+	{
+		// store key is released
+		keys[key] = false;
+	}
+
+}
+
+unsigned int generatePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID)
 {
 	int width, height, channels;
-	unsigned char* data = nullptr;
+	data = nullptr;
 	if (heightmap != nullptr) {
 		data = stbi_load(heightmap, &width, &height, &channels, comp);
 		if (data) {
@@ -262,9 +369,11 @@ unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float
 		int x = i % width;
 		int z = i / width;
 
+		float texHeight = data[i * comp];
+
 		// TODO: set position
 		vertices[index++] = x * xzScale;
-		vertices[index++] = 0;
+		vertices[index++] = (texHeight / 255.0f) * hScale;
 		vertices[index++] = z * xzScale;
 
 		// TODO: set normal
@@ -330,7 +439,7 @@ unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float
 	delete[] vertices;
 	delete[] indices;
 
-	stbi_image_free(data);
+	//stbi_image_free(data);
 
 	return VAO;
 }

@@ -4,9 +4,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#include <glm/ext/matrix_float4x4.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/quaternion.hpp>
+
 
 int Util::init(GLFWwindow*& window, const int width, const int height)
 {
@@ -60,10 +58,39 @@ void Util::mouseCallback(GLFWwindow* window, double xpos, double ypos, float& la
 	if (yaw <= -180) yaw += 360;
 }
 
-void Util::processInput(GLFWwindow* window)
+void Util::processInput(GLFWwindow* window, bool keys[1024], glm::vec3& camPos, glm::mat4& viewMat, glm::quat camQuat)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+
+	bool camChanged = false;
+
+	if (keys[GLFW_KEY_W])
+	{
+		camPos += camQuat * glm::vec3(0, 0, 1);
+		camChanged = true;
+	}
+	if (keys[GLFW_KEY_S])
+	{
+		camPos += camQuat * glm::vec3(0, 0, -1);
+		camChanged = true;
+	}
+	if (keys[GLFW_KEY_A])
+	{
+		camPos += camQuat * glm::vec3(1, 0, 0);
+		camChanged = true;
+	}
+	if (keys[GLFW_KEY_D])
+	{
+		camPos += camQuat * glm::vec3(-1, 0, 0);
+		camChanged = true;
+	}
+	if (camChanged)
+	{
+		glm::vec3 camForward = camQuat * glm::vec3(0, 0, 1);
+		glm::vec3 camUp = camQuat * glm::vec3(0, 1, 0);
+		viewMat = glm::lookAt(camPos, camPos + camForward, camUp);
+	}
 }
 
 void Util::loadFile(const char* filename, char*& output)
@@ -149,7 +176,7 @@ void Util::createProgram(GLuint& programID, const char* vertex, const char* frag
 	delete fragmentSrc;
 }
 
-GLuint Util::loadTexture(const char* path)
+GLuint Util::loadTexture(const char* path, int comp)
 {
 	GLuint textureID;
 	glGenTextures(1, &textureID);
@@ -159,10 +186,11 @@ GLuint Util::loadTexture(const char* path)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	int width, height, numChannels;
-	unsigned char* data = stbi_load(path, &width, &height, &numChannels, 0);
+	unsigned char* data = stbi_load(path, &width, &height, &numChannels, comp);
 
 	if (data)
 	{
+		if (comp != 0) numChannels = comp;
 		if (numChannels == 3)
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		else if (numChannels == 4)
