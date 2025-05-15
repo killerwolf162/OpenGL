@@ -152,6 +152,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="metalFragment.shader" />
+    <None Include="shaders\skyFragment.shader" />
+    <None Include="shaders\skyVertex.shader" />
+    <None Include="shaders\terrainFragment.shader" />
+    <None Include="shaders\terrainVertex.shader" />
     <None Include="shaders\woodFragment.shader" />
     <None Include="shaders\simpleVertex.shader" />
   </ItemGroup>
