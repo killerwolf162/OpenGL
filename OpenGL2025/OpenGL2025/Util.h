@@ -14,6 +14,5 @@ public:
 	static void loadFile(const char* filename, char*& output);
 	static void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 	static GLuint loadTexture(const char* path, int comp = 0);
-
 };
 

@@ -8,7 +8,6 @@
 #include "Cube.h"
 #include "Animations.h"
 #include "stb_image.h"
-#include "Terrain.h"
 
 // Shaderprogram IDs
 GLuint woodProgram;
@@ -89,17 +88,29 @@ glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
 glm::vec3 cameraPosition = glm::vec3(200, 50, 200);
 glm::mat4 view, projection;
 
-// Canera Movement
 float lastX, lastY;
 bool firstMouse = true;
 float camYaw, camPitch;
 glm::quat camQuat;
+
+// terrain data
+GLuint terrainVAO;
+GLuint terrainIndexCount;
+GLuint heightmapID;
+GLuint heightNormalID;
+unsigned char* heightmapTex;
+unsigned char* heighNormalTex;
+
+GLuint dirt, sand, grass, rock, snow;
+
 
 // forward dec
 void setupBasicProgram(GLuint program, glm::vec3 lightPos, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat);
 void setupSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat, int indexCount);
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mod);
+unsigned int generatePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
+void renderTerrain();
 
 int main()
 {
@@ -114,9 +125,14 @@ int main()
 	glm::vec3 position1 = glm::vec3(0, 0, 0);
 	glm::vec3 position2 = glm::vec3(0, 0, 0);
 
-	//setup terrain
-	Terrain terrain("textures/heightmap.png", "textures/heightnormal.png");
-	terrain.terrainVAO = terrain.generatePlain();
+	terrainVAO = generatePlane("textures/heightmap.png", heightmapTex, GL_RGBA, 4, 100.0f, 5.0f, terrainIndexCount, heightmapID);
+	heightNormalID = Util::loadTexture("textures/heightnormal.png");
+
+	dirt = Util::loadTexture("textures/dirt.jpg");
+	sand = Util::loadTexture("textures/sand.jpg");
+	grass = Util::loadTexture("textures/grass.png", 4);
+	rock = Util::loadTexture("textures/rock.jpg");
+	snow = Util::loadTexture("textures/snow.jpg");
 
 	// Setup box1
 	Cube box(vertices, indicis, "textures/box-texture-01.png", "textures/box-texture-01-normal.png", position1);
@@ -150,13 +166,12 @@ int main()
 		// Rendering
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-		float t = glfwGetTime();
-		lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
 		// les 4 skybox + terrain
 		setupSkyBox(skyboxProgram, box.cubeVAO, lightDirection, cameraPosition, view, projection, box.cubeIndexCount);
-		//setupTerrain(terrainProgram, terrain.terrainVAO, lightDirection, cameraPosition, view, projection, terrain.terrainIndexCount);
-		terrain.renderTerrain(terrainProgram, lightDirection, cameraPosition, view, projection);
+
+
+		renderTerrain();
+
 
 		//Les 3 Programs + anims
 
@@ -218,6 +233,66 @@ void setupSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 camer
 	glEnable(GL_DEPTH);
 }
 
+
+void renderTerrain()
+{
+	glEnable(GL_DEPTH);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	glUseProgram(terrainProgram);
+	glUniform1i(glGetUniformLocation(terrainProgram, "mainTex"), 0);
+	glUniform1i(glGetUniformLocation(terrainProgram, "normalTex"), 1);
+
+	glUniform1i(glGetUniformLocation(terrainProgram, "dirt"), 2);
+	glUniform1i(glGetUniformLocation(terrainProgram, "sand"), 3);
+	glUniform1i(glGetUniformLocation(terrainProgram, "grass"), 4);
+	glUniform1i(glGetUniformLocation(terrainProgram, "rock"), 5);
+	glUniform1i(glGetUniformLocation(terrainProgram, "snow"), 6);
+
+	glm::mat4 worldMat = glm::mat4(1.0f);
+
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "world"), 1, GL_FALSE, glm::value_ptr(worldMat));
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+	float t = glfwGetTime();
+	lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
+
+	glUniform3fv(glGetUniformLocation(terrainProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
+	glUniform3fv(glGetUniformLocation(terrainProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, heightmapID);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, heightNormalID);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, dirt);
+
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, sand);
+
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, grass);
+
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, rock);
+
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, snow);
+
+	glBindVertexArray(terrainVAO);
+	glDrawElements(GL_TRIANGLES, terrainIndexCount, GL_UNSIGNED_INT, 0);
+
+
+	glDisable(GL_DEPTH);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+}
+
 void mouseCallback(GLFWwindow* window, double xpos, double ypos)
 {
 	float x = (float)xpos;
@@ -263,4 +338,108 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 		keys[key] = false;
 	}
 
+}
+
+unsigned int generatePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID)
+{
+	int width, height, channels;
+	data = nullptr;
+	if (heightmap != nullptr) {
+		data = stbi_load(heightmap, &width, &height, &channels, comp);
+		if (data) {
+			glGenTextures(1, &heightmapID);
+			glBindTexture(GL_TEXTURE_2D, heightmapID);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+	}
+
+	int stride = 8;
+	float* vertices = new float[(width * height) * stride];
+	unsigned int* indices = new unsigned int[(width - 1) * (height - 1) * 6];
+
+	int index = 0;
+	for (int i = 0; i < (width * height); i++) {
+		// TODO: calculate x/z values
+		int x = i % width;
+		int z = i / width;
+
+		float texHeight = data[i * comp];
+
+		// TODO: set position
+		vertices[index++] = x * xzScale;
+		vertices[index++] = (texHeight / 255.0f) * hScale;
+		vertices[index++] = z * xzScale;
+
+		// TODO: set normal
+		vertices[index++] = 0;
+		vertices[index++] = 1;
+		vertices[index++] = 0;
+
+		// TODO: set uv
+		vertices[index++] = x / (float)width;
+		vertices[index++] = z / (float)height;
+	}
+
+	// OPTIONAL TODO: Calculate normal
+	// TODO: Set normal
+
+	index = 0;
+	for (int i = 0; i < (width - 1) * (height - 1); i++)
+	{
+		int x = i % (width - 1);
+		int z = i / (width - 1);
+
+		int vertex = z * width + x;
+
+		indices[index++] = vertex;
+		indices[index++] = vertex + width;
+		indices[index++] = vertex + width + 1;
+
+		indices[index++] = vertex;
+		indices[index++] = vertex + width + 1;
+		indices[index++] = vertex + 1;
+	}
+
+	unsigned int vertSize = (width * height) * stride * sizeof(float);
+	indexCount = ((width - 1) * (height - 1) * 6);
+
+	unsigned int VAO, VBO, EBO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, vertSize, vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+
+	// vertex information!
+	// position
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, 0);
+	glEnableVertexAttribArray(0);
+	// normal
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
+	// uv
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * 6));
+	glEnableVertexAttribArray(2);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindVertexArray(0);
+
+	delete[] vertices;
+	delete[] indices;
+
+	//stbi_image_free(data);
+
+	return VAO;
 }

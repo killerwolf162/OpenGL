@@ -148,7 +148,6 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Geometry.cpp" />
-    <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -165,7 +164,6 @@
     <ClInclude Include="Cube.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Geometry.h" />
-    <ClInclude Include="Terrain.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
