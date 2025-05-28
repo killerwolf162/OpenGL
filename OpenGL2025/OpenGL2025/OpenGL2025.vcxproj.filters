@@ -36,29 +36,9 @@
     <ClCompile Include="Animations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="shaders\simpleVertex.shader">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shaders\woodFragment.shader">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="metalFragment.shader">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shaders\skyFragment.shader">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shaders\skyVertex.shader">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shaders\terrainVertex.shader">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shaders\terrainFragment.shader">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
+    <ClCompile Include="Terrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Geometry.h">
@@ -76,5 +56,37 @@
     <ClInclude Include="Animations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Terrain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\shaders\modelFragment.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\modelVertex.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\simpleVertex.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\skyFragment.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\skyVertex.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\terrainFragment.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\terrainVertex.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\woodFragment.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="resources\shaders\metalFragment.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

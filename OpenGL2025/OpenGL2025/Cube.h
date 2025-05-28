@@ -23,7 +23,7 @@ public:
 	glm::vec3 translateSpeed = glm::vec3(0, 0, 0);
 	float rotationSpeed = 0.1f;
 
-	Cube(std::vector<float> verts, std::vector<int> inds, const char* tex, const char* normalTex, glm::vec3 position);
+	Cube(std::vector<float> verts, std::vector<int> inds, const char* tex, const char* normalTex, glm::vec3 position, int scale = 1);
 	virtual ~Cube();
 
 	void rotate(float angle);

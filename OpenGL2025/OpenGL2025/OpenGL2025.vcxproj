@@ -95,6 +95,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(SolutionDir)$(ProjectName)/resources" "$(TargetDir)resources\" /E /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -111,6 +114,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(SolutionDir)$(ProjectName)/resources" "$(TargetDir)resources\" /E /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -124,6 +130,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>glfw3.lib;opengl32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(SolutionDir)$(ProjectName)/resources" "$(TargetDir)resources\" /E /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -141,6 +150,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>glfw3.lib;opengl32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(SolutionDir)$(ProjectName)/resources" "$(TargetDir)resources\" /E /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Animations.cpp" />
@@ -152,21 +164,23 @@
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="metalFragment.shader" />
-    <None Include="shaders\skyFragment.shader" />
-    <None Include="shaders\skyVertex.shader" />
-    <None Include="shaders\terrainFragment.shader" />
-    <None Include="shaders\terrainVertex.shader" />
-    <None Include="shaders\woodFragment.shader" />
-    <None Include="shaders\simpleVertex.shader" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="Animations.h" />
     <ClInclude Include="Cube.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="Util.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\shaders\metalFragment.shader" />
+    <None Include="resources\shaders\modelFragment.shader" />
+    <None Include="resources\shaders\modelVertex.shader" />
+    <None Include="resources\shaders\simpleVertex.shader" />
+    <None Include="resources\shaders\skyFragment.shader" />
+    <None Include="resources\shaders\skyVertex.shader" />
+    <None Include="resources\shaders\terrainFragment.shader" />
+    <None Include="resources\shaders\terrainVertex.shader" />
+    <None Include="resources\shaders\woodFragment.shader" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

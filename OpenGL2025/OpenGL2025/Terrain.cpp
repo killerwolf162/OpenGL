@@ -8,11 +8,11 @@ Terrain::Terrain(const char* heightmap, const char* heightNormalmap)
 	this->heightNormalmap = heightNormalmap;
 
 
-	dirt = Util::loadTexture("textures/dirt.jpg");
-	sand = Util::loadTexture("textures/sand.jpg");
-	grass = Util::loadTexture("textures/grass.png", 4);
-	rock = Util::loadTexture("textures/rock.jpg");
-	snow = Util::loadTexture("textures/snow.jpg");
+	dirt = Util::loadTexture("resources/textures/dirt.jpg");
+	sand = Util::loadTexture("resources/textures/sand.jpg");
+	grass = Util::loadTexture("resources/textures/grass.png", 4);
+	rock = Util::loadTexture("resources/textures/rock.jpg");
+	snow = Util::loadTexture("resources/textures/snow.jpg");
 	heightNormalID = Util::loadTexture(heightNormalmap);
 }
 
