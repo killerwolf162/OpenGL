@@ -2,7 +2,7 @@
 #include "Geometry.h"
 #include "Util.h"
 
-Cube::Cube(std::vector<float> verts, std::vector<int> inds, const char* tex, const char* normalTex, glm::vec3 position)
+Cube::Cube(std::vector<float> verts, std::vector<int> inds, const char* tex, const char* normalTex, glm::vec3 position, int scale)
 {
 	this->vertices = verts;
 	this->indicis = inds;
@@ -14,7 +14,7 @@ Cube::Cube(std::vector<float> verts, std::vector<int> inds, const char* tex, con
 
 	world = glm::mat4(1.0f);
 	world = glm::rotate(world, glm::radians(0.0f), glm::vec3(0, 1, 0));
-	world = glm::scale(world, glm::vec3(1, 1, 1));
+	world = glm::scale(world, glm::vec3(scale, scale, scale));
 	world = glm::translate(world, worldPosition);
 
 }

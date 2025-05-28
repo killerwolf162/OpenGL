@@ -8,12 +8,16 @@
 #include "Cube.h"
 #include "Animations.h"
 #include "stb_image.h"
+#include "Terrain.h"
+#include "model.h"
 
 // Shaderprogram IDs
 GLuint woodProgram;
 GLuint metalProgram;
 GLuint skyboxProgram;
 GLuint terrainProgram;
+GLuint modelProgram;
+GLuint treeProgram;
 
 // Box verices
 std::vector<float> vertices
@@ -85,32 +89,27 @@ bool keys[1024];
 
 // World Data
 glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
-glm::vec3 cameraPosition = glm::vec3(200, 50, 200);
+glm::vec3 cameraPosition = glm::vec3(900, 130, 1400);
 glm::mat4 view, projection;
 
+// Canera Movement
 float lastX, lastY;
 bool firstMouse = true;
 float camYaw, camPitch;
 glm::quat camQuat;
 
-// terrain data
-GLuint terrainVAO;
-GLuint terrainIndexCount;
-GLuint heightmapID;
-GLuint heightNormalID;
-unsigned char* heightmapTex;
-unsigned char* heighNormalTex;
-
-GLuint dirt, sand, grass, rock, snow;
-
-
 // forward dec
 void setupBasicProgram(GLuint program, glm::vec3 lightPos, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat);
-void setupSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat, int indexCount);
+void renderSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat, int indexCount);
+void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat);
+
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mod);
-unsigned int generatePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
-void renderTerrain();
+
+Model* backpack;
+Model* house;
+Model* table;
+Model* chair;
 
 int main()
 {
@@ -118,43 +117,47 @@ int main()
 	int res = Util::init(window, WIDTH, HEIGHT);
 	if (res != 0) return res;
 
+	stbi_set_flip_vertically_on_load(true);
+
 	glfwSetCursorPosCallback(window, mouseCallback);
 	glfwSetKeyCallback(window, keyCallback);
 	glfwMakeContextCurrent(window);
 
-	glm::vec3 position1 = glm::vec3(0, 0, 0);
-	glm::vec3 position2 = glm::vec3(0, 0, 0);
+	glm::vec3 position1 = glm::vec3(30, 10, 0);
+	glm::vec3 position2 = glm::vec3(0, 10, 30);
 
-	terrainVAO = generatePlane("textures/heightmap.png", heightmapTex, GL_RGBA, 4, 100.0f, 5.0f, terrainIndexCount, heightmapID);
-	heightNormalID = Util::loadTexture("textures/heightnormal.png");
-
-	dirt = Util::loadTexture("textures/dirt.jpg");
-	sand = Util::loadTexture("textures/sand.jpg");
-	grass = Util::loadTexture("textures/grass.png", 4);
-	rock = Util::loadTexture("textures/rock.jpg");
-	snow = Util::loadTexture("textures/snow.jpg");
+	//setup terrain
+	Terrain terrain("resources/textures/heightmap.png", "resources/textures/heightnormal.png");
+	terrain.terrainVAO = terrain.generatePlain();
 
 	// Setup box1
-	Cube box(vertices, indicis, "textures/box-texture-01.png", "textures/box-texture-01-normal.png", position1);
+	Cube box(vertices, indicis, "resources/textures/box-texture-01.png", "resources/textures/box-texture-01-normal.png", position1, 50);
 	box.translateSpeed = -glm::vec3(0.005f, 0.01f, 0);
 	box.rotate(15.0f);
 
 	// Setup box2
-	Cube box2(vertices, indicis, "textures/metalbox-texture-02.png", "textures/metalbox-texture-02-normal.png", position2);
+	Cube box2(vertices, indicis, "resources/textures/metalbox-texture-02.png", "resources/textures/metalbox-texture-02-normal.png", position2, 50);
 	box2.translateSpeed = glm::vec3(0.02f, 0.01f, 0);
 	box2.rotate(65.0f);
 
+	// Setup model
+	backpack = new Model("resources/models/backpack/backpack.obj");
+	house = new Model("resources/models/house/house.obj");
+	table = new Model("resources/models/table/table.obj");
+	chair = new Model("resources/models/chair/chair.obj");
+
 	// Create shaderprograms
-	Util::createProgram(woodProgram, "shaders/simpleVertex.shader", "shaders/woodFragment.shader");
-	Util::createProgram(metalProgram, "shaders/simpleVertex.shader", "shaders/metalFragment.shader");
-	Util::createProgram(skyboxProgram, "shaders/skyVertex.shader", "shaders/skyFragment.shader");
-	Util::createProgram(terrainProgram, "shaders/terrainVertex.shader", "shaders/terrainFragment.shader");
+	Util::createProgram(woodProgram, "resources/shaders/simpleVertex.shader", "resources/shaders/woodFragment.shader");
+	Util::createProgram(metalProgram, "resources/shaders/simpleVertex.shader", "resources/shaders/metalFragment.shader");
+	Util::createProgram(skyboxProgram, "resources/shaders/skyVertex.shader", "resources/shaders/skyFragment.shader");
+	Util::createProgram(terrainProgram, "resources/shaders/terrainVertex.shader", "resources/shaders/terrainFragment.shader");
+	Util::createProgram(modelProgram, "resources/shaders/modelVertex.shader", "resources/shaders/modelFragment.shader");
 
 	// Create viewport
 	glViewport(0, 0, WIDTH, HEIGHT);
 
 	// Matrices!
-	view = glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 1));
+	view = glm::lookAt(cameraPosition, glm::vec3(800, 100, 1500), glm::vec3(0, 1, 1));
 	projection = glm::perspective(glm::radians(90.0f), WIDTH / (float)HEIGHT, 0.1f, 5000.0f);
 
 	// Rendering Loop
@@ -166,16 +169,28 @@ int main()
 		// Rendering
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
 		// les 4 skybox + terrain
-		setupSkyBox(skyboxProgram, box.cubeVAO, lightDirection, cameraPosition, view, projection, box.cubeIndexCount);
 
+		// Animate LightDirection
+		//float t = glfwGetTime();
+		//lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
+		
+		renderSkyBox(skyboxProgram, box.cubeVAO, lightDirection, cameraPosition, view, projection, box.cubeIndexCount);
+		terrain.renderTerrain(terrainProgram, lightDirection, cameraPosition, view, projection);
 
-		renderTerrain();
+		// les 5 models
+		
+		float t = glfwGetTime();
 
-
+		renderModel(backpack, glm::vec3(910, 112, 1420), glm::vec3(0, t, 0), glm::vec3(1, 1, 1), modelProgram, lightDirection, cameraPosition, view, projection);
+		renderModel(house, glm::vec3(900, 100, 1400), glm::vec3(0, 0, 0), glm::vec3(10, 10, 10), modelProgram, lightDirection, cameraPosition, view, projection);
+		renderModel(table, glm::vec3(909, 100, 1420), glm::vec3(0, 0, 0), glm::vec3(3, 3, 3), modelProgram, lightDirection, cameraPosition, view, projection);
+		renderModel(chair, glm::vec3(910, 100, 1410), glm::vec3(0, 0, 0), glm::vec3(8, 8, 8), modelProgram, lightDirection, cameraPosition, view, projection);
+		
 		//Les 3 Programs + anims
 
-		/*// Set wood program
+		/* // Set wood program
 		setupBasicProgram(woodProgram, lightDirection, cameraPosition, view, projection);
 		box.render(woodProgram);
 		Animations::movementInBoxAnim(box, 1, 1);
@@ -206,7 +221,42 @@ void setupBasicProgram(GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, 
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMat));
 }
 
-void setupSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat, int indexCount)
+void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat)
+{
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	glUseProgram(program);
+
+	glUniform1i(glGetUniformLocation(program, "texture_diffuse1"), 0);
+	glUniform1i(glGetUniformLocation(program, "texture_specular1"), 1);
+	glUniform1i(glGetUniformLocation(program, "texture_normal1"), 2);
+	glUniform1i(glGetUniformLocation(program, "texture_roughness1"), 3);
+	glUniform1i(glGetUniformLocation(program, "texture_ao1"), 4);
+
+	glm::mat4 worldMat = glm::mat4(1.0f);
+	worldMat = glm::translate(worldMat, pos);
+	worldMat = worldMat * glm::toMat4(glm::quat(rot));
+	worldMat = glm::scale(worldMat, scale);
+
+
+	glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(worldMat));
+	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMat));
+
+	glUniform3fv(glGetUniformLocation(program, "lightDirection"), 1, glm::value_ptr(lightDir));
+	glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(cameraPos));
+
+	model->Draw(program);
+
+	glDisable(GL_BLEND);
+}
+
+void renderSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat, int indexCount)
 {
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
@@ -231,66 +281,6 @@ void setupSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 camer
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_DEPTH);
-}
-
-
-void renderTerrain()
-{
-	glEnable(GL_DEPTH);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
-	glUseProgram(terrainProgram);
-	glUniform1i(glGetUniformLocation(terrainProgram, "mainTex"), 0);
-	glUniform1i(glGetUniformLocation(terrainProgram, "normalTex"), 1);
-
-	glUniform1i(glGetUniformLocation(terrainProgram, "dirt"), 2);
-	glUniform1i(glGetUniformLocation(terrainProgram, "sand"), 3);
-	glUniform1i(glGetUniformLocation(terrainProgram, "grass"), 4);
-	glUniform1i(glGetUniformLocation(terrainProgram, "rock"), 5);
-	glUniform1i(glGetUniformLocation(terrainProgram, "snow"), 6);
-
-	glm::mat4 worldMat = glm::mat4(1.0f);
-
-	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "world"), 1, GL_FALSE, glm::value_ptr(worldMat));
-	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-	float t = glfwGetTime();
-	lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
-
-	glUniform3fv(glGetUniformLocation(terrainProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
-	glUniform3fv(glGetUniformLocation(terrainProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, heightmapID);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, heightNormalID);
-
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, dirt);
-
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, sand);
-
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, grass);
-
-	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_2D, rock);
-
-	glActiveTexture(GL_TEXTURE6);
-	glBindTexture(GL_TEXTURE_2D, snow);
-
-	glBindVertexArray(terrainVAO);
-	glDrawElements(GL_TRIANGLES, terrainIndexCount, GL_UNSIGNED_INT, 0);
-
-
-	glDisable(GL_DEPTH);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos)
@@ -338,108 +328,4 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 		keys[key] = false;
 	}
 
-}
-
-unsigned int generatePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID)
-{
-	int width, height, channels;
-	data = nullptr;
-	if (heightmap != nullptr) {
-		data = stbi_load(heightmap, &width, &height, &channels, comp);
-		if (data) {
-			glGenTextures(1, &heightmapID);
-			glBindTexture(GL_TEXTURE_2D, heightmapID);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-			glGenerateMipmap(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, 0);
-		}
-	}
-
-	int stride = 8;
-	float* vertices = new float[(width * height) * stride];
-	unsigned int* indices = new unsigned int[(width - 1) * (height - 1) * 6];
-
-	int index = 0;
-	for (int i = 0; i < (width * height); i++) {
-		// TODO: calculate x/z values
-		int x = i % width;
-		int z = i / width;
-
-		float texHeight = data[i * comp];
-
-		// TODO: set position
-		vertices[index++] = x * xzScale;
-		vertices[index++] = (texHeight / 255.0f) * hScale;
-		vertices[index++] = z * xzScale;
-
-		// TODO: set normal
-		vertices[index++] = 0;
-		vertices[index++] = 1;
-		vertices[index++] = 0;
-
-		// TODO: set uv
-		vertices[index++] = x / (float)width;
-		vertices[index++] = z / (float)height;
-	}
-
-	// OPTIONAL TODO: Calculate normal
-	// TODO: Set normal
-
-	index = 0;
-	for (int i = 0; i < (width - 1) * (height - 1); i++)
-	{
-		int x = i % (width - 1);
-		int z = i / (width - 1);
-
-		int vertex = z * width + x;
-
-		indices[index++] = vertex;
-		indices[index++] = vertex + width;
-		indices[index++] = vertex + width + 1;
-
-		indices[index++] = vertex;
-		indices[index++] = vertex + width + 1;
-		indices[index++] = vertex + 1;
-	}
-
-	unsigned int vertSize = (width * height) * stride * sizeof(float);
-	indexCount = ((width - 1) * (height - 1) * 6);
-
-	unsigned int VAO, VBO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, vertSize, vertices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-
-	// vertex information!
-	// position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, 0);
-	glEnableVertexAttribArray(0);
-	// normal
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * 3));
-	glEnableVertexAttribArray(1);
-	// uv
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * 6));
-	glEnableVertexAttribArray(2);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glBindVertexArray(0);
-
-	delete[] vertices;
-	delete[] indices;
-
-	//stbi_image_free(data);
-
-	return VAO;
 }
