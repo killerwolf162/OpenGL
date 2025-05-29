@@ -123,20 +123,20 @@ int main()
 	glfwSetKeyCallback(window, keyCallback);
 	glfwMakeContextCurrent(window);
 
-	glm::vec3 position1 = glm::vec3(30, 10, 0);
-	glm::vec3 position2 = glm::vec3(0, 10, 30);
+	glm::vec3 position1 = glm::vec3(0,0,0);
+	glm::vec3 position2 = glm::vec3(10,10,10);
 
 	//setup terrain
 	Terrain terrain("resources/textures/heightmap.png", "resources/textures/heightnormal.png");
 	terrain.terrainVAO = terrain.generatePlain();
 
 	// Setup box1
-	Cube box(vertices, indicis, "resources/textures/box-texture-01.png", "resources/textures/box-texture-01-normal.png", position1, 50);
+	Cube box(vertices, indicis, "resources/textures/box-texture-01.png", "resources/textures/box-texture-01-normal.png", position1, 100);
 	box.translateSpeed = -glm::vec3(0.005f, 0.01f, 0);
 	box.rotate(15.0f);
 
 	// Setup box2
-	Cube box2(vertices, indicis, "resources/textures/metalbox-texture-02.png", "resources/textures/metalbox-texture-02-normal.png", position2, 50);
+	Cube box2(vertices, indicis, "resources/textures/metalbox-texture-02.png", "resources/textures/metalbox-texture-02-normal.png", position2, 100);
 	box2.translateSpeed = glm::vec3(0.02f, 0.01f, 0);
 	box2.rotate(65.0f);
 
@@ -183,22 +183,22 @@ int main()
 		
 		float t = glfwGetTime();
 
-		renderModel(backpack, glm::vec3(910, 112, 1420), glm::vec3(0, t, 0), glm::vec3(1, 1, 1), modelProgram, lightDirection, cameraPosition, view, projection);
-		renderModel(house, glm::vec3(900, 100, 1400), glm::vec3(0, 0, 0), glm::vec3(10, 10, 10), modelProgram, lightDirection, cameraPosition, view, projection);
-		renderModel(table, glm::vec3(909, 100, 1420), glm::vec3(0, 0, 0), glm::vec3(3, 3, 3), modelProgram, lightDirection, cameraPosition, view, projection);
-		renderModel(chair, glm::vec3(910, 100, 1410), glm::vec3(0, 0, 0), glm::vec3(8, 8, 8), modelProgram, lightDirection, cameraPosition, view, projection);
+		renderModel(backpack, glm::vec3(910, 105, 1420), glm::vec3(0, t, 0), glm::vec3(1, 1, 1), modelProgram, lightDirection, cameraPosition, view, projection);
+		renderModel(house, glm::vec3(900, 93, 1400), glm::vec3(0, 0, 0), glm::vec3(10, 10, 10), modelProgram, lightDirection, cameraPosition, view, projection);
+		renderModel(table, glm::vec3(909, 93, 1420), glm::vec3(0, 0, 0), glm::vec3(3, 3, 3), modelProgram, lightDirection, cameraPosition, view, projection);
+		renderModel(chair, glm::vec3(910, 93, 1410), glm::vec3(0, 0, 0), glm::vec3(8, 8, 8), modelProgram, lightDirection, cameraPosition, view, projection);
 		
 		//Les 3 Programs + anims
 
 		/* // Set wood program
 		setupBasicProgram(woodProgram, lightDirection, cameraPosition, view, projection);
 		box.render(woodProgram);
-		Animations::movementInBoxAnim(box, 1, 1);
+		//Animations::movementInBoxAnim(box, 1, 1);
 
 		// Set metal program
 		setupBasicProgram(metalProgram, lightDirection, cameraPosition, view, projection);
 		box2.render(metalProgram);
-		Animations::movementInBoxAnim(box2, 2, 2); */
+		//Animations::movementInBoxAnim(box2, 2, 2);*/
 
 		// Swap & Poll
 		glfwSwapBuffers(window);

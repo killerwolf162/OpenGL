@@ -9,12 +9,12 @@ class Cube
 private:
 
 	GLuint tex, normalTex;
-	
+	glm::vec3 worldPosition;
 
 	std::vector<float> vertices;
 	std::vector<int> indicis;
 
-	glm::vec3 worldPosition;
+	
 public:
 	GLuint cubeVAO, cubeEBO;
 	int cubeSize, cubeIndexCount;
