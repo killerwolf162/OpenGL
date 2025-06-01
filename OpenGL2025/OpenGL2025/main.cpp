@@ -9,7 +9,6 @@
 #include "Animations.h"
 #include "stb_image.h"
 #include "Terrain.h"
-#include "model.h"
 
 // Shaderprogram IDs
 GLuint woodProgram;
@@ -85,6 +84,8 @@ std::vector<int> indicis
 const int WIDTH = 1280;
 const int HEIGHT = 720;
 
+int season = 0;
+
 bool keys[1024];
 
 // World Data
@@ -99,10 +100,6 @@ float camYaw, camPitch;
 glm::quat camQuat;
 
 // forward dec
-void setupBasicProgram(GLuint program, glm::vec3 lightPos, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat);
-void renderSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat, int indexCount);
-void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat);
-
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mod);
 
@@ -172,33 +169,51 @@ int main()
 
 		// les 4 skybox + terrain
 
-		// Animate LightDirection
-		//float t = glfwGetTime();
+		//// Animate LightDirection
+		//
 		//lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
-		
-		renderSkyBox(skyboxProgram, box.cubeVAO, lightDirection, cameraPosition, view, projection, box.cubeIndexCount);
-		terrain.renderTerrain(terrainProgram, lightDirection, cameraPosition, view, projection);
-
-		// les 5 models
 		
 		float t = glfwGetTime();
 
-		renderModel(backpack, glm::vec3(910, 105, 1420), glm::vec3(0, t, 0), glm::vec3(1, 1, 1), modelProgram, lightDirection, cameraPosition, view, projection);
-		renderModel(house, glm::vec3(900, 93, 1400), glm::vec3(0, 0, 0), glm::vec3(10, 10, 10), modelProgram, lightDirection, cameraPosition, view, projection);
-		renderModel(table, glm::vec3(909, 93, 1420), glm::vec3(0, 0, 0), glm::vec3(3, 3, 3), modelProgram, lightDirection, cameraPosition, view, projection);
-		renderModel(chair, glm::vec3(910, 93, 1410), glm::vec3(0, 0, 0), glm::vec3(8, 8, 8), modelProgram, lightDirection, cameraPosition, view, projection);
+		if (t < 10)
+			season = 0;
+		else if (t < 20)
+			season = 1;
+		else if (t < 30)
+			season = 2;
+		else if (t < 40)
+			season = 3;
+		else if (t < 50)
+			season = 4;
+		else if (t < 60)
+			season = 5;
+		else if (t < 70)
+			season = 6;
+		else if (t < 80)
+			season = 7;
+		else if (t > 80)
+			t = 0;
+
+		Util::renderSkybox(skyboxProgram, box.cubeVAO, lightDirection, cameraPosition, view, projection, box.cubeIndexCount);
+		terrain.renderTerrain(terrainProgram, lightDirection, cameraPosition, view, projection, season);
+
+		// les 5 models
+
+		Util::setupModelProgram(modelProgram, lightDirection, cameraPosition, view, projection);
+		Util::renderModel(modelProgram, backpack, glm::vec3(910, 105, 1420), glm::vec3(0, t, 0), glm::vec3(1, 1, 1));
+		Util::renderModel(modelProgram, house, glm::vec3(900, 93, 1400), glm::vec3(0, 0, 0), glm::vec3(10, 10, 10));
+		Util::renderModel(modelProgram, table, glm::vec3(909, 93, 1420), glm::vec3(0, 0, 0), glm::vec3(3, 3, 3));
+		Util::renderModel(modelProgram, chair, glm::vec3(910, 93, 1410), glm::vec3(0, 0, 0), glm::vec3(8, 8, 8));
 		
 		//Les 3 Programs + anims
 
-		/* // Set wood program
-		setupBasicProgram(woodProgram, lightDirection, cameraPosition, view, projection);
+		Util::setupBasicProgram(woodProgram, lightDirection, cameraPosition, view, projection);
 		box.render(woodProgram);
-		//Animations::movementInBoxAnim(box, 1, 1);
+		Animations::movementInBoxAnim(box, 100, 100);
 
-		// Set metal program
-		setupBasicProgram(metalProgram, lightDirection, cameraPosition, view, projection);
+		Util::setupBasicProgram(metalProgram, lightDirection, cameraPosition, view, projection);
 		box2.render(metalProgram);
-		//Animations::movementInBoxAnim(box2, 2, 2);*/
+		//Animations::movementInBoxAnim(box2, 100, 100);
 
 		// Swap & Poll
 		glfwSwapBuffers(window);
@@ -206,81 +221,6 @@ int main()
 	}
 	glfwTerminate();
 	return 0;
-}
-
-void setupBasicProgram(GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat)
-{
-	glUseProgram(program);
-	glUniform1i(glGetUniformLocation(program, "mainTex"), 0);
-	glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
-
-	glUniform3fv(glGetUniformLocation(program, "lightPosition"), 1, glm::value_ptr(lightDir));
-	glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(cameraPos));
-
-	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMat));
-}
-
-void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale, GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat)
-{
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
-	glUseProgram(program);
-
-	glUniform1i(glGetUniformLocation(program, "texture_diffuse1"), 0);
-	glUniform1i(glGetUniformLocation(program, "texture_specular1"), 1);
-	glUniform1i(glGetUniformLocation(program, "texture_normal1"), 2);
-	glUniform1i(glGetUniformLocation(program, "texture_roughness1"), 3);
-	glUniform1i(glGetUniformLocation(program, "texture_ao1"), 4);
-
-	glm::mat4 worldMat = glm::mat4(1.0f);
-	worldMat = glm::translate(worldMat, pos);
-	worldMat = worldMat * glm::toMat4(glm::quat(rot));
-	worldMat = glm::scale(worldMat, scale);
-
-
-	glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(worldMat));
-	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMat));
-
-	glUniform3fv(glGetUniformLocation(program, "lightDirection"), 1, glm::value_ptr(lightDir));
-	glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(cameraPos));
-
-	model->Draw(program);
-
-	glDisable(GL_BLEND);
-}
-
-void renderSkyBox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat, int indexCount)
-{
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_DEPTH);
-
-	glUseProgram(program);
-
-	glUniform3fv(glGetUniformLocation(program, "lightDirection"), 1, glm::value_ptr(lightDir));
-	glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(cameraPos));
-
-	glm::mat4 worldMat = glm::mat4(1.0f);
-	worldMat = glm::translate(worldMat, cameraPos);
-	worldMat = glm::scale(worldMat, glm::vec3(10, 10, 10));
-
-	glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(worldMat));
-	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMat));
-
-	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_DEPTH);
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos)

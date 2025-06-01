@@ -12,6 +12,7 @@ uniform sampler2D dirt, sand, grass, rock, snow;
 
 uniform vec3 lightDirection;
 uniform vec3 cameraPosition;
+uniform int season;
 
 vec3 lerp(vec3 a, vec3 b, float t)
 {
@@ -40,10 +41,16 @@ void main()
 	// build color
 	float y = worldPosition.y;
 
-	float sd = clamp((y-25) / 10,-1,1) *.5+.5;
-	float dg = clamp((y-75) / 10,-1,1) *.5+.5;
-	float gr = clamp((y-125) / 10,-1,1) *.5+.5;
-	float rs = clamp((y-200) / 10,-1,1) *.5+.5; 
+	float height1 = clamp((y-25) / 10,-1,1) *.5+.5;
+	float height2 = clamp((y-50) / 10,-1,1) *.5+.5;
+	float height3 = clamp((y-75) / 10,-1,1) *.5+.5;
+	float height4 = clamp((y-100) / 10,-1,1) *.5+.5;
+	float height5 = clamp((y-125) / 10,-1,1) *.5+.5;
+	float height6 = clamp((y-150) / 10,-1,1) *.5+.5;
+	float height7 = clamp((y-175) / 10,-1,1) *.5+.5;
+	float height8 = clamp((y-200) / 10,-1,1) *.5+.5;
+	float height9 = clamp((y-225) / 10,-1,1) *.5+.5;
+	float height10 = clamp((y-250) / 10,-1,1) *.5+.5;
 
 	float dist = length(worldPosition.xyz - cameraPosition);
 	float uvLerp = clamp((dist - 250) / 150.0 - 1.0, 0.0, 1.0) * 0.5 + 0.5;
@@ -66,8 +73,18 @@ void main()
 	vec3 rockColor = lerp(rockColorClose, rockColorFar, uvLerp);
 	vec3 snowColor = lerp(snowColorClose, snowColorFar, uvLerp);
 
-
-	vec3 diffuse = lerp(lerp(lerp(lerp(sandColor, dirtColor, sd), grassColor, dg), rockColor, gr), snowColor, rs);
+	//spring
+	vec3 earlySpringColour = lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(sandColor, dirtColor, height1), dirtColor, height2), grassColor, height3), grassColor, height4), grassColor, height5), grassColor, height6), snowColor, height7), snowColor, height8), snowColor, height9) , snowColor, height10);
+	vec3 lateSpringColour = lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(sandColor, dirtColor, height1), dirtColor, height2), grassColor, height3), grassColor, height4), grassColor, height5), grassColor, height6), rockColor, height7), snowColor, height8), snowColor, height9) , snowColor, height10);
+	//summer
+	vec3 earlySummerColour = lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(sandColor, dirtColor, height1), grassColor, height2), grassColor, height3), grassColor, height4), grassColor, height5), grassColor, height6), rockColor, height7), rockColor, height8), rockColor, height9) , snowColor, height10);
+	vec3 lateSummerColour = lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(sandColor, dirtColor, height1), grassColor, height2), grassColor, height3), grassColor, height4), grassColor, height5), grassColor, height6), rockColor, height7), rockColor, height8), rockColor, height9) , snowColor, height10);
+	//autum
+	vec3 earlyAutumColour = lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(sandColor, dirtColor, height1), grassColor, height2), grassColor, height3), grassColor, height4), grassColor, height5), grassColor, height6), rockColor, height7), rockColor, height8), rockColor, height9) , snowColor, height10);
+	vec3 lateAutumColour = lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(sandColor, dirtColor, height1), grassColor, height2), grassColor, height3), grassColor, height4), grassColor, height5), grassColor, height6), rockColor, height7), rockColor, height8), snowColor, height9) , snowColor, height10);
+	//winter
+	vec3 earlyWinterColour = lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(sandColor, dirtColor, height1), dirtColor, height2), grassColor, height3), grassColor, height4), grassColor, height5), grassColor, height6), rockColor, height7), snowColor, height8), snowColor, height9) , snowColor, height10);
+	vec3 lateWinterColour = lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(lerp(sandColor, dirtColor, height1), dirtColor, height2), grassColor, height3), grassColor, height4), grassColor, height5), grassColor, height6), snowColor, height7), snowColor, height8), snowColor, height9) , snowColor, height10);
 
 	float fog = pow(clamp((dist - 250) / 1000.0, 0.0, 1.0), 2.0);
 
@@ -76,7 +93,35 @@ void main()
 
 	vec3 fogColor = lerp(botColor, topColor, max(viewDir.y, 0.0));
 
-	vec4 output = vec4(lerp(diffuse * min(lightValue + 0.1, 1.0), fogColor, fog),1.0);// + specular * output.rgb;
+	vec3 seasonalColour;
+	switch(season){
+		case 0:
+		seasonalColour = earlySpringColour;
+		break;
+		case 1:
+		seasonalColour = lateSpringColour;
+		break;
+		case 2:
+		seasonalColour = earlySummerColour;
+		break;
+		case 3:
+		seasonalColour = lateSummerColour;
+		break;
+		case 4:
+		seasonalColour = earlyAutumColour;
+		break;
+		case 5:
+		seasonalColour = lateAutumColour;
+		break;
+		case 6:
+		seasonalColour = earlyWinterColour;
+		break;
+		case 7:
+		seasonalColour = lateWinterColour;
+		break;
+		}
+
+	vec4 output = vec4(lerp(seasonalColour * min(lightValue + 0.1, 1.0), fogColor, fog),1.0);// + specular * output.rgb;
 
 	FragColor = output;
 }

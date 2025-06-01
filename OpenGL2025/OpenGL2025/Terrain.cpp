@@ -125,7 +125,7 @@ unsigned int Terrain::generatePlain()
 	return VAO;
 }
 
-void Terrain::renderTerrain(GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat)
+void Terrain::renderTerrain(GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat, int season)
 {
 	glEnable(GL_DEPTH);
 	glEnable(GL_DEPTH_TEST);
@@ -149,6 +149,8 @@ void Terrain::renderTerrain(GLuint program, glm::vec3 lightDir, glm::vec3 camera
 	// Make sure to set the light direction uniform
 	glUniform3fv(glGetUniformLocation(program, "lightDirection"), 1, glm::value_ptr(lightDir));
 	glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(cameraPos));
+
+	glUniform1i(glGetUniformLocation(program, "season"), season);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, heightmapID);

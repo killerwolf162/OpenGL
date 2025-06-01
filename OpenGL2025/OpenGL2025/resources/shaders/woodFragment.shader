@@ -10,34 +10,37 @@ in vec3 worldPosition;
 uniform sampler2D mainTex;
 uniform sampler2D normalTex;
 
-uniform vec3 lightPosition;
+uniform vec3 lightPosition; // Can be a point or direction
 uniform vec3 cameraPosition;
 
 void main()
 {
-	// Normal Map
+    vec3 normal = texture(normalTex, uv).rgb;
+    normal = normalize(normal * 2.0 - 1.0);
+    normal = normalize(TBN * normal);
 
-	vec3 normal = texture(normalTex, uv).rgb;
-	normal = normalize(normal * 2.0 - 1.0);
-	normal = TBN * normal;
+    // If lightPosition is a direction:
+    vec3 lightDir = normalize(-lightPosition);  // Use minus if it's directional light
 
-	// Specular data
-	vec3 lightDir = normalize(lightPosition - worldPosition);
-	vec3 viewDir = normalize(cameraPosition - worldPosition);
-	vec3 reflDir = reflect(-lightDir, normal);
+    // For point light:
+    // vec3 lightDir = normalize(lightPosition - worldPosition);
 
-	// lighting
-	float lightValue = max(dot(normal, lightDir), 0.0);
+    vec3 viewDir = normalize(cameraPosition - worldPosition);
+    vec3 reflDir = reflect(-lightDir, normal);
 
-	//specular -> going for wood
-	float specularStrength = 0.1;
-    float shininess = 16.0;
+    float diffuse = max(dot(normal, lightDir), 0.0);
+
+    float specularStrength = 0.2;
+    float shininess = 32.0;
     float spec = pow(max(dot(reflDir, viewDir), 0.0), shininess) * specularStrength;
 
-	vec4 albedo = vec4(color, 1.0) * texture(mainTex, uv);
+    vec4 texColor = texture(mainTex, uv);
+    //vec3 ambient = vec3(0.12, 0.09, 0.07);
 
-	vec3 warmAmbient = vec3(0.1, 0.07, 0.05);  // soft warm ambient tone
-	vec3 lighting = (albedo.rgb * lightValue + warmAmbient) + spec;
+    vec3 lighting = (texColor.rgb * diffuse) + spec;
 
-	FragColor = vec4(lighting, 1.0);;
+    // Optional gamma correction
+    lighting = pow(lighting, vec3(1.0 / 2.2));
+
+    FragColor = vec4(lighting, 1.0);
 }

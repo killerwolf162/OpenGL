@@ -15,28 +15,32 @@ uniform vec3 cameraPosition;
 
 void main()
 {
-	// Normal Map
+    vec3 normal = texture(normalTex, uv).rgb;
+    normal = normalize(normal * 2.0 - 1.0);
+    normal = normalize(TBN * normal);
 
-	vec3 normal = texture(normalTex, uv).rgb;
-	normal = normalize(normal * 2.0 - 1.0);
+    // If lightPosition is a direction:
+    vec3 lightDir = normalize(-lightPosition);  // Use minus if it's directional light
 
-	normal.rg = normal.rg * 0.8;
-	normal = normalize(normal);
+    // For point light:
+    // vec3 lightDir = normalize(lightPosition - worldPosition);
 
-	normal = TBN * normal;
+    vec3 viewDir = normalize(cameraPosition - worldPosition);
+    vec3 reflDir = reflect(-lightDir, normal);
 
-	vec3 lightDirection = normalize(worldPosition - lightPosition);
+    float diffuse = max(dot(normal, lightDir), 0.0);
 
-	// Specular data
-	vec3 viewDir = normalize(worldPosition - cameraPosition);
-	vec3 reflDir = normalize(reflect(lightDirection, normal));
+    float specularStrength = 0.6;
+    float shininess = 256.0;
+    float spec = pow(max(dot(reflDir, viewDir), 0.0), shininess) * specularStrength;
 
-	// lighting
-	float lightValue = max(-dot(normal, lightDirection), 0.0);
-	float specular = pow(max(-dot(reflDir, viewDir),0.0),5);
+    vec4 texColor = texture(mainTex, uv);
+    //vec3 ambient = vec3(0.12, 0.09, 0.07);
 
-	vec4 output = vec4(color, 1.0f) * texture(mainTex, uv);
-	output.rgb = output.rgb * min(lightValue + 0.1, 1.0) + specular * output.rgb;
+    vec3 lighting = (texColor.rgb * diffuse) + spec;
 
-	FragColor = output;
+    // Optional gamma correction
+    lighting = pow(lighting, vec3(1.0 / 2.2));
+
+    FragColor = vec4(lighting, 1.0);
 }

@@ -7,16 +7,15 @@
 
 class Terrain
 {
-private:
+public:
 
+	//textures
 	GLuint normal;
 	GLuint dirt;
 	GLuint sand;
 	GLuint grass;
 	GLuint rock;
 	GLuint snow;
-
-public:
 
 	GLuint terrainVAO;
 	GLuint terrainIndexCount;
@@ -35,7 +34,7 @@ public:
 	virtual ~Terrain();
 
 	unsigned int generatePlain();
-	void renderTerrain(GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat);
+	void renderTerrain(GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat, int season);
 
 
 };

@@ -208,3 +208,82 @@ GLuint Util::loadTexture(const char* path, int comp)
 
 	return textureID;
 }
+
+void Util::setupBasicProgram(GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat)
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	glUseProgram(program);
+	glUniform1i(glGetUniformLocation(program, "mainTex"), 0);
+	glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
+
+	glUniform3fv(glGetUniformLocation(program, "lightPosition"), 1, glm::value_ptr(lightDir));
+	glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(cameraPos));
+
+	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMat));
+}
+
+void Util::setupModelProgram(GLuint program, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat)
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	glUseProgram(program);
+
+	glUniform1i(glGetUniformLocation(program, "texture_diffuse1"), 0);
+	glUniform1i(glGetUniformLocation(program, "texture_specular1"), 1);
+	glUniform1i(glGetUniformLocation(program, "texture_normal1"), 2);
+	glUniform1i(glGetUniformLocation(program, "texture_roughness1"), 3);
+	glUniform1i(glGetUniformLocation(program, "texture_ao1"), 4);
+
+	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMat));
+
+	glUniform3fv(glGetUniformLocation(program, "lightDirection"), 1, glm::value_ptr(lightDir));
+	glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(cameraPos));
+}
+
+void Util::renderModel(GLuint program, Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale)
+{
+	glm::mat4 worldMat = glm::mat4(1.0f);
+	worldMat = glm::translate(worldMat, pos);
+	worldMat = worldMat * glm::toMat4(glm::quat(rot));
+	worldMat = glm::scale(worldMat, scale);
+
+	glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(worldMat));
+
+	model->Draw(program);
+
+	glDisable(GL_BLEND);
+}
+
+void Util::renderSkybox(GLuint program, GLuint VAO, glm::vec3 lightDir, glm::vec3 cameraPos, glm::mat4 viewMat, glm::mat4 projectionMat, int indexCount)
+{
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH);
+
+	glUseProgram(program);
+
+	glUniform3fv(glGetUniformLocation(program, "lightDirection"), 1, glm::value_ptr(lightDir));
+	glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(cameraPos));
+
+	glm::mat4 worldMat = glm::mat4(1.0f);
+	worldMat = glm::translate(worldMat, cameraPos);
+	worldMat = glm::scale(worldMat, glm::vec3(10, 10, 10));
+
+	glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(worldMat));
+	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMat));
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMat));
+
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH);
+}
