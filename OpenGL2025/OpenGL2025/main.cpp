@@ -121,19 +121,19 @@ int main()
 	glfwMakeContextCurrent(window);
 
 	glm::vec3 position1 = glm::vec3(0,0,0);
-	glm::vec3 position2 = glm::vec3(10,10,10);
+	glm::vec3 position2 = glm::vec3(3,3,3);
 
 	//setup terrain
 	Terrain terrain("resources/textures/heightmap.png", "resources/textures/heightnormal.png");
 	terrain.terrainVAO = terrain.generatePlain();
 
 	// Setup box1
-	Cube box(vertices, indicis, "resources/textures/box-texture-01.png", "resources/textures/box-texture-01-normal.png", position1, 100);
+	Cube box(vertices, indicis, "resources/textures/box-texture-01.png", "resources/textures/box-texture-01-normal.png", position1, 10);
 	box.translateSpeed = -glm::vec3(0.005f, 0.01f, 0);
 	box.rotate(15.0f);
 
 	// Setup box2
-	Cube box2(vertices, indicis, "resources/textures/metalbox-texture-02.png", "resources/textures/metalbox-texture-02-normal.png", position2, 100);
+	Cube box2(vertices, indicis, "resources/textures/metalbox-texture-02.png", "resources/textures/metalbox-texture-02-normal.png", position1, 10);
 	box2.translateSpeed = glm::vec3(0.02f, 0.01f, 0);
 	box2.rotate(65.0f);
 
@@ -175,23 +175,23 @@ int main()
 		
 		float t = glfwGetTime();
 
-		if (t < 10)
+		if (t < 5)
 			season = 0;
-		else if (t < 20)
+		else if (t < 10)
 			season = 1;
-		else if (t < 30)
+		else if (t < 15)
 			season = 2;
-		else if (t < 40)
+		else if (t < 20)
 			season = 3;
-		else if (t < 50)
+		else if (t < 25)
 			season = 4;
-		else if (t < 60)
+		else if (t < 30)
 			season = 5;
-		else if (t < 70)
+		else if (t < 35)
 			season = 6;
-		else if (t < 80)
+		else if (t < 40)
 			season = 7;
-		else if (t > 80)
+		else if (t > 45)
 			t = 0;
 
 		Util::renderSkybox(skyboxProgram, box.cubeVAO, lightDirection, cameraPosition, view, projection, box.cubeIndexCount);
@@ -213,7 +213,7 @@ int main()
 
 		Util::setupBasicProgram(metalProgram, lightDirection, cameraPosition, view, projection);
 		box2.render(metalProgram);
-		//Animations::movementInBoxAnim(box2, 100, 100);
+		Animations::movementInBoxAnim(box2, 100, 100);
 
 		// Swap & Poll
 		glfwSwapBuffers(window);
@@ -235,8 +235,10 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos)
 		firstMouse = false;
 	}
 
-	float dx = x - lastX;
-	float dy = y - lastY;
+	float sensitivity = 0.4f; // smaller value = less sensitive
+	float dx = (x - lastX) * sensitivity;
+	float dy = (y - lastY) * sensitivity;
+
 	lastX = x;
 	lastY = y;
 

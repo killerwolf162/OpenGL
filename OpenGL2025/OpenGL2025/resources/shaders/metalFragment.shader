@@ -35,9 +35,10 @@ void main()
     float spec = pow(max(dot(reflDir, viewDir), 0.0), shininess) * specularStrength;
 
     vec4 texColor = texture(mainTex, uv);
-    //vec3 ambient = vec3(0.12, 0.09, 0.07);
+    vec3 ambient = vec3(0.05, 0.08, 0.12);
+    vec3 specularTint = vec3(0.8, 0.9, 1.0); // cool tone for specular
 
-    vec3 lighting = (texColor.rgb * diffuse) + spec;
+    vec3 lighting = (ambient + diffuse * texColor.rgb + spec * specularTint);
 
     // Optional gamma correction
     lighting = pow(lighting, vec3(1.0 / 2.2));
