@@ -134,7 +134,7 @@ int main()
 
 	// Setup box2
 	Cube box2(vertices, indicis, "resources/textures/metalbox-texture-02.png", "resources/textures/metalbox-texture-02-normal.png", position1, 10);
-	box2.translateSpeed = glm::vec3(0.02f, 0.01f, 0);
+	box2.translateSpeed = glm::vec3(0, 0, 0);
 	box2.rotate(65.0f);
 
 	// Setup model
@@ -174,25 +174,19 @@ int main()
 		//lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
 		
 		float t = glfwGetTime();
+		int logicTime = (int)t % 40;
 
-		if (t < 5)
-			season = 0;
-		else if (t < 10)
-			season = 1;
-		else if (t < 15)
-			season = 2;
-		else if (t < 20)
-			season = 3;
-		else if (t < 25)
-			season = 4;
-		else if (t < 30)
-			season = 5;
-		else if (t < 35)
-			season = 6;
-		else if (t < 40)
-			season = 7;
-		else if (t > 45)
-			t = 0;
+		switch (logicTime) {
+		case 5:  season = 0; break;
+		case 10: season = 1; break;
+		case 15: season = 2; break;
+		case 20: season = 3; break;
+		case 25: season = 4; break;
+		case 30: season = 5; break;
+		case 35: season = 6; break;
+		case 40: season = 7; break;
+		}
+
 
 		Util::renderSkybox(skyboxProgram, box.cubeVAO, lightDirection, cameraPosition, view, projection, box.cubeIndexCount);
 		terrain.renderTerrain(terrainProgram, lightDirection, cameraPosition, view, projection, season);
